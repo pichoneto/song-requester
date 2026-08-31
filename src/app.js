@@ -166,10 +166,10 @@ function adminButtons(item, options = {}) {
 
   const { allowDelete = true } = options;
   const playNowButton = item.status === "queued" || !item.status
-    ? `<button type="button" data-action="play-now" data-id="${item.id}">Poner ahora</button>`
+    ? `<button type="button" data-action="play-now" data-id="${item.id}" aria-label="Poner ahora" title="Poner ahora">Poner ahora</button>`
     : "";
   const deleteButton = allowDelete
-    ? `<button type="button" data-action="delete" data-id="${item.id}">Eliminar</button>`
+    ? `<button type="button" data-action="delete" data-id="${item.id}" aria-label="Eliminar" title="Eliminar">Eliminar</button>`
     : "";
 
   if (!playNowButton && !deleteButton) {

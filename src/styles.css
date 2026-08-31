@@ -176,13 +176,14 @@ menu button {
 
 .catalog-sticky {
   position: sticky;
-  top: 118px;
+  top: 104px;
   z-index: 4;
-  margin: -10px -8px 16px;
-  padding: 10px 8px 2px;
-  background: rgba(246, 242, 234, 0.96);
+  margin: -28px -8px 16px;
+  padding: 28px 8px 2px;
+  background: var(--bg);
   border-bottom: 1px solid rgba(222, 214, 200, 0.75);
   backdrop-filter: blur(12px);
+  box-shadow: 0 10px 18px rgba(23, 32, 38, 0.05);
 }
 
 .catalog-sticky .toolbar {
@@ -308,6 +309,8 @@ menu button {
 
 .queue-item::before {
   content: attr(data-position);
+  grid-row: 1 / 3;
+  align-self: center;
   display: grid;
   width: 34px;
   height: 34px;
@@ -316,6 +319,7 @@ menu button {
   background: var(--green);
   border-radius: 999px;
   font-weight: 850;
+  line-height: 1;
 }
 
 .queue-admin-actions {
@@ -327,10 +331,19 @@ menu button {
   display: block;
 }
 
+.queue-song {
+  grid-column: 2;
+  min-width: 0;
+}
+
 .queue-song span,
 .queue-meta {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.queue-meta {
+  grid-column: 2;
 }
 
 .current-card {
@@ -463,23 +476,63 @@ menu button {
 }
 
 .item-actions {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  align-self: center;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
+  align-items: center;
   justify-content: end;
 }
 
 .item-actions button {
-  min-height: 34px;
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
+  place-items: center;
+  padding: 0;
   color: #7b1b2d;
   background: #ffe6eb;
   border: 1px solid #e99aaa;
+  font-size: 0;
+  line-height: 0;
 }
 
 .item-actions button[data-action="play-now"] {
   color: #0d5746;
   background: #dff5ec;
   border-color: #9ad7c1;
+}
+
+.item-actions button[data-action="play-now"]::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 13px solid currentColor;
+  transform: translate(-42%, -50%);
+}
+
+.item-actions button[data-action="delete"]::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3Cpath d='M10 11v5'/%3E%3Cpath d='M14 11v5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3Cpath d='M10 11v5'/%3E%3Cpath d='M14 11v5'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .completed-list .queue-item {
@@ -722,21 +775,7 @@ menu button:disabled {
     padding: 12px;
   }
 
-  .queue-item::before {
-    grid-row: 1 / 3;
-    align-self: center;
-    line-height: 1;
-  }
-
-  .queue-meta {
-    grid-column: 2;
-  }
-
   .item-actions {
-    grid-column: 3;
-    grid-row: 1 / 3;
-    align-self: center;
-    align-items: center;
     flex-wrap: nowrap;
   }
 
@@ -759,53 +798,6 @@ menu button:disabled {
   .admin-actions button {
     flex: 1 1 100%;
     min-height: 44px;
-  }
-
-  .item-actions {
-    flex-direction: row;
-    justify-content: center;
-  }
-
-  .item-actions button {
-    position: relative;
-    flex: 0 0 auto;
-    display: grid;
-    width: 42px;
-    min-width: 42px;
-    height: 42px;
-    min-height: 42px;
-    padding: 0;
-    align-items: center;
-    justify-items: center;
-    place-items: center;
-    font-size: 0;
-    line-height: 0;
-  }
-
-  .item-actions button[data-action="play-now"]::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-top: 8px solid transparent;
-    border-bottom: 8px solid transparent;
-    border-left: 13px solid currentColor;
-    transform: translate(-42%, -50%);
-  }
-
-  .item-actions button[data-action="delete"]::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 18px;
-    height: 18px;
-    background: currentColor;
-    transform: translate(-50%, -50%);
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3Cpath d='M10 11v5'/%3E%3Cpath d='M14 11v5'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3Cpath d='M10 11v5'/%3E%3Cpath d='M14 11v5'/%3E%3C/svg%3E") center / contain no-repeat;
   }
 
   .modal {
