@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101820">
+    <title>Karaoke villareño</title>
+    <link rel="stylesheet" href="src/styles.css">
+    <script src="src/app.js" type="module"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-logos">
+        <img class="brand-mark brand-mark-shield" src="assets/escudo-villar-del-olmo.svg" alt="Escudo de Villar del Olmo">
+        <img class="brand-mark brand-mark-piltrafa" src="assets/logo-piltrafa-mark.png" alt="Logo Piltrafas">
+      </div>
+      <div class="brand">
+        <p class="eyebrow">Karaoke villareño</p>
+        <h1>Petición de canciones</h1>
+      </div>
+      <nav class="tabs" aria-label="Vistas">
+        <button class="tab is-active" type="button" data-view="catalog">Cancionero</button>
+        <button class="tab" type="button" data-view="queue">Cola <span id="queueCount">0</span></button>
+        <button class="tab" type="button" data-view="admin">Administración</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="view is-active" id="catalogView" aria-labelledby="catalogTitle">
+        <div class="catalog-sticky">
+          <div class="toolbar">
+            <div>
+              <h2 id="catalogTitle">Canciones</h2>
+              <p id="catalogMeta">Cargando cancionero...</p>
+            </div>
+            <label class="searchbox">
+              <span>Buscar canción o artista</span>
+              <input id="searchInput" type="search" autocomplete="off" placeholder="Canción o artista">
+            </label>
+          </div>
+          <div id="cooldownNotice" class="notice" hidden></div>
+        </div>
+        <div id="songList" class="song-list" aria-live="polite"></div>
+      </section>
+
+      <section class="view" id="queueView" aria-labelledby="queueTitle">
+        <div class="toolbar">
+          <div>
+            <h2 id="queueTitle">Cola del karaoke</h2>
+          </div>
+          <div id="queueAdminControls" class="admin-actions inline-actions" hidden>
+            <button id="nextSongButton" type="button">Pasar a la siguiente</button>
+          </div>
+        </div>
+
+        <section class="queue-section">
+          <div class="section-heading">
+            <h3>En curso</h3>
+          </div>
+          <div id="currentSong" class="current-song"></div>
+          <div id="emptyCurrent" class="empty-state">No hay ninguna canción en curso.</div>
+        </section>
+
+        <section class="queue-section">
+          <div class="section-heading">
+            <h3>Próximas</h3>
+          </div>
+          <ol id="queueList" class="queue-list"></ol>
+          <div id="emptyQueue" class="empty-state">Todavía no hay canciones en cola.</div>
+        </section>
+
+        <section class="queue-section">
+          <div class="section-heading">
+            <h3>Ya ha sonado</h3>
+          </div>
+          <ol id="completedList" class="queue-list completed-list"></ol>
+          <div id="emptyCompleted" class="empty-state">Aún no hay canciones completadas.</div>
+        </section>
+      </section>
+
+      <section class="view" id="adminView" aria-labelledby="adminTitle">
+        <section class="admin-panel" aria-labelledby="adminTitle">
+          <div>
+            <p class="eyebrow">Panel de control</p>
+            <h2 id="adminTitle">Administración</h2>
+            <p id="adminStatus">Inicia sesión para gestionar la cola.</p>
+          </div>
+          <form id="adminLoginForm" class="admin-login">
+            <label>
+              Usuario
+              <input id="adminEmail" type="email" autocomplete="username" required placeholder="admin@ejemplo.com">
+            </label>
+            <label>
+              Contraseña
+              <input id="adminPassword" type="password" autocomplete="current-password" required>
+            </label>
+            <button type="submit">Entrar</button>
+          </form>
+          <div id="adminControls" class="admin-actions" hidden>
+            <button id="adminLogoutButton" type="button">Salir</button>
+          </div>
+          <div id="adminError" class="modal-error" hidden></div>
+        </section>
+
+        <section class="admin-qr" aria-labelledby="qrTitle">
+          <div>
+            <h2 id="qrTitle">QR para pedir canciones</h2>
+            <p>Escanea este código para abrir esta página. Al publicarla en GitHub Pages, el QR apuntará a la URL real.</p>
+            <div class="url-box" id="pageUrl"></div>
+          </div>
+          <canvas id="qrCanvas" width="256" height="256" aria-label="Código QR de la página"></canvas>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="requestDialog">
+      <form method="dialog" class="modal">
+        <button class="close-button" value="cancel" aria-label="Cerrar" type="submit" formnovalidate>&times;</button>
+        <p class="eyebrow">Solicitar canción</p>
+        <h2 id="modalSongTitle"></h2>
+        <p id="modalSongArtist"></p>
+        <label>
+          Tu nombre
+          <input id="requesterInput" type="text" maxlength="60" required placeholder="Nombre o alias">
+        </label>
+        <div id="modalError" class="modal-error" hidden></div>
+        <menu>
+          <button value="cancel" type="submit" formnovalidate>Cancelar</button>
+          <button id="confirmRequestButton" value="default" type="submit">Añadir a la cola</button>
+        </menu>
+      </form>
+    </dialog>
+  </body>
+</html>
