@@ -16,7 +16,8 @@ def normalize_search(text):
 
 
 def paragraph_text(paragraph):
-    return "".join(node.text or "" for node in paragraph.iter(f"{WORD_NS}t")).strip()
+    text = "".join(node.text or "" for node in paragraph.iter(f"{WORD_NS}t"))
+    return unicodedata.normalize("NFC", text).strip()
 
 
 def read_docx_lines(path):
@@ -55,7 +56,7 @@ def main():
         if not parsed:
             continue
 
-        artist, title = parsed
+        artist, title = (unicodedata.normalize("NFC", value) for value in parsed)
         key = normalize_search(f"{artist}|{title}")
         if key in seen:
             continue

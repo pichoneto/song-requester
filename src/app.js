@@ -159,19 +159,27 @@ function requestMeta(item) {
   return `${item.requesterName || "Sin nombre"} · ${formatQueueTime(item.createdAt || item.createdAtMs)}`;
 }
 
-function adminButtons(item) {
+function adminButtons(item, options = {}) {
   if (!state.isAdmin) {
     return "";
   }
 
+  const { allowDelete = true } = options;
   const playNowButton = item.status === "queued" || !item.status
     ? `<button type="button" data-action="play-now" data-id="${item.id}">Poner ahora</button>`
     : "";
+  const deleteButton = allowDelete
+    ? `<button type="button" data-action="delete" data-id="${item.id}">Eliminar</button>`
+    : "";
+
+  if (!playNowButton && !deleteButton) {
+    return "";
+  }
 
   return `
     <div class="item-actions">
       ${playNowButton}
-      <button type="button" data-action="delete" data-id="${item.id}">Eliminar</button>
+      ${deleteButton}
     </div>
   `;
 }
@@ -209,7 +217,7 @@ function renderCurrent(current) {
       <h3></h3>
       <p></p>
     </div>
-    ${adminButtons(current)}
+    ${adminButtons(current, { allowDelete: false })}
     <div class="progress-track"><div class="progress-bar"></div></div>
   `;
   card.querySelector("h3").textContent = current.title;
@@ -217,11 +225,14 @@ function renderCurrent(current) {
   els.currentSong.append(card);
 }
 
-function renderList(container, items) {
+function renderList(container, items, options = {}) {
   const fragment = document.createDocumentFragment();
-  items.forEach((item) => {
+  items.forEach((item, index) => {
     const row = document.createElement("li");
     row.className = "queue-item";
+    if (options.showPosition) {
+      row.dataset.position = String(index + 1);
+    }
     row.innerHTML = queueItemTemplate(item);
     hydrateQueueItem(row, item);
     fragment.append(row);
@@ -232,7 +243,7 @@ function renderList(container, items) {
 function renderQueue() {
   const { current, queued, completed } = splitQueue();
   renderCurrent(current);
-  renderList(els.queueList, queued);
+  renderList(els.queueList, queued, { showPosition: true });
   renderList(els.completedList, completed);
 
   els.queueCount.textContent = queued.length + (current ? 1 : 0);

@@ -43,14 +43,9 @@
         <div id="songList" class="song-list" aria-live="polite"></div>
       </section>
 
-      <section class="view" id="queueView" aria-labelledby="queueTitle">
-        <div class="toolbar">
-          <div>
-            <h2 id="queueTitle">Cola del karaoke</h2>
-          </div>
-          <div id="queueAdminControls" class="admin-actions inline-actions" hidden>
-            <button id="nextSongButton" type="button">Pasar a la siguiente</button>
-          </div>
+      <section class="view" id="queueView" aria-label="Cola">
+        <div id="queueAdminControls" class="admin-actions queue-admin-actions" hidden>
+          <button id="nextSongButton" type="button">Pasar a la siguiente</button>
         </div>
 
         <section class="queue-section">
@@ -105,10 +100,9 @@
         <section class="admin-qr" aria-labelledby="qrTitle">
           <div>
             <h2 id="qrTitle">QR para pedir canciones</h2>
-            <p>Escanea este código para abrir esta página. Al publicarla en GitHub Pages, el QR apuntará a la URL real.</p>
             <div class="url-box" id="pageUrl"></div>
           </div>
-          <canvas id="qrCanvas" width="256" height="256" aria-label="Código QR de la página"></canvas>
+          <canvas id="qrCanvas" width="360" height="360" aria-label="Código QR de la página"></canvas>
         </section>
       </section>
     </main>

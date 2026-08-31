@@ -279,7 +279,6 @@ menu button {
   gap: 10px;
   padding: 0;
   list-style: none;
-  counter-reset: queue;
 }
 
 .queue-section {
@@ -308,8 +307,7 @@ menu button {
 }
 
 .queue-item::before {
-  counter-increment: queue;
-  content: counter(queue);
+  content: attr(data-position);
   display: grid;
   width: 34px;
   height: 34px;
@@ -318,6 +316,11 @@ menu button {
   background: var(--green);
   border-radius: 999px;
   font-weight: 850;
+}
+
+.queue-admin-actions {
+  justify-content: end;
+  margin-bottom: 18px;
 }
 
 .queue-song strong {
@@ -484,7 +487,6 @@ menu button {
 }
 
 .completed-list .queue-item::before {
-  counter-increment: none;
   content: "✓";
   color: #66737c;
   background: #eee6d8;
@@ -525,13 +527,13 @@ menu button:first-child {
 }
 
 #qrCanvas {
-  width: 256px;
-  height: 256px;
-  padding: 12px;
+  width: min(360px, 100%);
+  height: auto;
   background: white;
-  border: 1px solid var(--line);
+  border: 12px solid white;
   border-radius: 8px;
   box-shadow: var(--shadow);
+  image-rendering: pixelated;
 }
 
 dialog {
@@ -715,9 +717,15 @@ menu button:disabled {
 
   .queue-item {
     grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: start;
+    align-items: center;
     gap: 10px;
     padding: 12px;
+  }
+
+  .queue-item::before {
+    grid-row: 1 / 3;
+    align-self: center;
+    line-height: 1;
   }
 
   .queue-meta {
@@ -728,6 +736,8 @@ menu button:disabled {
     grid-column: 3;
     grid-row: 1 / 3;
     align-self: center;
+    align-items: center;
+    flex-wrap: nowrap;
   }
 
   .admin-panel,
@@ -757,32 +767,43 @@ menu button:disabled {
   }
 
   .item-actions button {
+    position: relative;
     flex: 0 0 auto;
     display: grid;
     width: 42px;
     min-width: 42px;
-    min-height: 40px;
+    height: 42px;
+    min-height: 42px;
     padding: 0;
+    align-items: center;
+    justify-items: center;
     place-items: center;
     font-size: 0;
+    line-height: 0;
   }
 
   .item-actions button[data-action="play-now"]::before {
     content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 0;
     height: 0;
-    margin-left: 2px;
     border-top: 8px solid transparent;
     border-bottom: 8px solid transparent;
     border-left: 13px solid currentColor;
+    transform: translate(-42%, -50%);
   }
 
   .item-actions button[data-action="delete"]::before {
     content: "";
-    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 18px;
     height: 18px;
     background: currentColor;
+    transform: translate(-50%, -50%);
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3Cpath d='M10 11v5'/%3E%3Cpath d='M14 11v5'/%3E%3C/svg%3E") center / contain no-repeat;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3Cpath d='M10 11v5'/%3E%3Cpath d='M14 11v5'/%3E%3C/svg%3E") center / contain no-repeat;
   }
