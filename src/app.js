@@ -124,11 +124,15 @@ function updateCooldownNotice() {
   els.cooldownNotice.textContent = `Ya hay una solicitud reciente desde este dispositivo. Nueva solicitud disponible en ${formatRemaining(remaining)}.`;
 }
 
-function setView(view) {
+function setView(view, options = {}) {
   els.tabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.view === view));
   Object.entries(els.views).forEach(([name, element]) => {
     element.classList.toggle("is-active", name === view);
   });
+  if (options.scrollToTop) {
+    window.scrollTo({ top: 0, behavior: "auto" });
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
+  }
 }
 
 function renderSongs() {
@@ -150,9 +154,7 @@ function renderSongs() {
   });
 
   els.songList.replaceChildren(fragment);
-  els.catalogMeta.textContent = state.filteredSongs.length === visibleSongs.length
-    ? `${state.filteredSongs.length} disponibles`
-    : `${state.filteredSongs.length} disponibles · ${visibleSongs.length} visibles`;
+  els.catalogMeta.textContent = `${state.filteredSongs.length} disponibles`;
   els.loadMoreSongsButton.hidden = visibleSongs.length >= state.filteredSongs.length;
 }
 
@@ -353,7 +355,6 @@ async function addRequest() {
   }
 
   updateCooldownNotice();
-  setView("queue");
   return true;
 }
 
@@ -466,6 +467,7 @@ function bindEvents() {
       if (await addRequest()) {
         state.selectedSong = null;
         els.dialog.close();
+        setView("queue", { scrollToTop: true });
       }
     } catch (error) {
       els.modalError.hidden = false;
