@@ -2,12 +2,11 @@ import json
 import re
 import sys
 import unicodedata
-import zipfile
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
-WORD_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+DEFAULT_SOURCE = "cancionero_lista_verificada.txt"
+DEFAULT_TARGET = "data/songs.json"
 
 
 def normalize_search(text):
@@ -15,21 +14,12 @@ def normalize_search(text):
     return "".join(ch for ch in text if not unicodedata.combining(ch))
 
 
-def paragraph_text(paragraph):
-    text = "".join(node.text or "" for node in paragraph.iter(f"{WORD_NS}t"))
-    return unicodedata.normalize("NFC", text).strip()
+def clean_text(text):
+    return unicodedata.normalize("NFC", re.sub(r"\s+", " ", text).strip())
 
 
-def read_docx_lines(path):
-    with zipfile.ZipFile(path) as docx:
-        document = ET.fromstring(docx.read("word/document.xml"))
-
-    lines = []
-    for paragraph in document.iter(f"{WORD_NS}p"):
-        text = paragraph_text(paragraph)
-        if text:
-            lines.append(re.sub(r"\s+", " ", text))
-    return lines
+def read_song_lines(path):
+    return [clean_text(line) for line in path.read_text(encoding="utf-8").splitlines() if clean_text(line)]
 
 
 def split_song(line):
@@ -39,24 +29,23 @@ def split_song(line):
 
     title = parts[-1]
     artist = " - ".join(parts[:-1])
-    return artist, title
+    return clean_text(artist), clean_text(title)
 
 
 def main():
-    source = Path(sys.argv[1] if len(sys.argv) > 1 else "cancionero_corregido_avanzado.docx")
-    target = Path(sys.argv[2] if len(sys.argv) > 2 else "data/songs.json")
+    source = Path(sys.argv[1] if len(sys.argv) > 1 else DEFAULT_SOURCE)
+    target = Path(sys.argv[2] if len(sys.argv) > 2 else DEFAULT_TARGET)
 
     rows = []
     seen = set()
-    for line in read_docx_lines(source):
-        if line.lower().startswith("cancionero karaoke"):
-            continue
-
+    skipped = []
+    for line in read_song_lines(source):
         parsed = split_song(line)
         if not parsed:
+            skipped.append(line)
             continue
 
-        artist, title = (unicodedata.normalize("NFC", value) for value in parsed)
+        artist, title = parsed
         key = normalize_search(f"{artist}|{title}")
         if key in seen:
             continue
@@ -77,6 +66,8 @@ def main():
         encoding="utf-8",
     )
     print(f"Extracted {len(rows)} songs to {target}")
+    if skipped:
+        print(f"Skipped {len(skipped)} lines without ' - ' separator.")
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@ const state = {
   user: null,
   userProfile: null,
   isAdmin: false,
+  cooldownEnabled: true,
 };
 
 const els = {
@@ -60,6 +61,7 @@ const els = {
   adminControls: document.querySelector("#adminControls"),
   queueAdminControls: document.querySelector("#queueAdminControls"),
   adminError: document.querySelector("#adminError"),
+  cooldownToggle: document.querySelector("#cooldownToggle"),
   nextSongButton: document.querySelector("#nextSongButton"),
   adminLogoutButton: document.querySelector("#adminLogoutButton"),
   pageUrl: document.querySelector("#pageUrl"),
@@ -87,7 +89,7 @@ function queueTimestamp(item) {
 }
 
 function remainingCooldown() {
-  if (state.isAdmin) {
+  if (state.isAdmin || !state.cooldownEnabled) {
     return 0;
   }
 
@@ -256,6 +258,9 @@ function renderAdmin() {
   els.adminLoginForm.hidden = hasEmailSession;
   els.adminControls.hidden = !hasEmailSession;
   els.queueAdminControls.hidden = !state.isAdmin;
+  els.cooldownToggle.checked = state.cooldownEnabled;
+  els.cooldownToggle.disabled = !state.isAdmin;
+  els.cooldownToggle.closest(".toggle-row").hidden = !state.isAdmin;
   if (state.isAdmin) {
     els.adminStatus.textContent = `Sesión iniciada como ${state.user?.email || "admin"}.`;
   } else if (state.user?.email) {
@@ -313,18 +318,25 @@ async function addRequest() {
 
   if (!state.isAdmin) {
     const lastRequestAt = firebase.Timestamp.now();
-    localStorage.setItem(LOCAL_LAST_REQUEST_KEY, String(Date.now()));
-    state.userProfile = { ...state.userProfile, displayName: requesterName, lastRequestAt };
+    if (state.cooldownEnabled) {
+      localStorage.setItem(LOCAL_LAST_REQUEST_KEY, String(Date.now()));
+      state.userProfile = { ...state.userProfile, displayName: requesterName, lastRequestAt };
+    } else {
+      state.userProfile = { ...state.userProfile, displayName: requesterName };
+    }
 
     try {
+      const profileUpdate = {
+        displayName: requesterName,
+        updatedAt: firebase.serverTimestamp(),
+      };
+      if (state.cooldownEnabled) {
+        profileUpdate.lastRequestAt = lastRequestAt;
+      }
       await runFirebaseStep("actualizar users/{uid}", () =>
         firebase.setDoc(
           firebase.doc(db, "users", state.user.uid),
-          {
-            displayName: requesterName,
-            lastRequestAt,
-            updatedAt: firebase.serverTimestamp(),
-          },
+          profileUpdate,
           { merge: true },
         ),
       );
@@ -487,6 +499,39 @@ function bindEvents() {
     }
   });
 
+  els.cooldownToggle.addEventListener("change", async () => {
+    if (!state.isAdmin) {
+      els.cooldownToggle.checked = state.cooldownEnabled;
+      return;
+    }
+
+    const enabled = els.cooldownToggle.checked;
+    state.cooldownEnabled = enabled;
+    updateCooldownNotice();
+    renderAdmin();
+
+    try {
+      await runFirebaseStep("actualizar settings/app", () =>
+        firebase.setDoc(
+          firebase.doc(db, "settings", "app"),
+          {
+            cooldownEnabled: enabled,
+            updatedAt: firebase.serverTimestamp(),
+            updatedBy: state.user.uid,
+          },
+          { merge: true },
+        ),
+      );
+    } catch (error) {
+      state.cooldownEnabled = !enabled;
+      renderAdmin();
+      updateCooldownNotice();
+      els.adminError.hidden = false;
+      els.adminError.textContent = readableFirebaseError(error);
+      console.error(error);
+    }
+  });
+
   els.views.queue.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-action]");
     if (!button || !state.isAdmin) {
@@ -521,6 +566,21 @@ function subscribeToQueue() {
       els.emptyQueue.hidden = false;
       els.emptyQueue.textContent = readableFirebaseError(error);
       console.error(error);
+    },
+  );
+}
+
+function subscribeToSettings() {
+  firebase.onSnapshot(
+    firebase.doc(db, "settings", "app"),
+    (snapshot) => {
+      state.cooldownEnabled = snapshot.exists() ? snapshot.data().cooldownEnabled !== false : true;
+      renderAdmin();
+      updateCooldownNotice();
+    },
+    (error) => {
+      error.firebaseStep = "leer settings/app";
+      console.warn(readableFirebaseError(error), error);
     },
   );
 }
@@ -616,6 +676,7 @@ async function connectFirebase() {
   await authModule.setPersistence(auth, authModule.browserLocalPersistence);
 
   await bootstrapAuth();
+  subscribeToSettings();
   subscribeToQueue();
 }
 

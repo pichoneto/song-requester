@@ -5,7 +5,7 @@ Web estatica para publicar en GitHub Pages un cancionero de karaoke, permitir bu
 ## Uso local
 
 ```powershell
-python tools/extract_songs.py cancionero_corregido_avanzado.docx data/songs.json
+python tools/extract_songs.py cancionero_lista_verificada.txt data/songs.json
 python -m http.server 8000
 ```
 
@@ -20,8 +20,9 @@ La app usa Firebase Authentication y Cloud Firestore.
 - `users/{uid}` guarda el nombre mostrado, `lastRequestAt`, `createdAt` y `lastSeenAt`.
 - `requests/{autoId}` guarda cada cancion solicitada.
 - `admins/{uid}` autoriza que un usuario de Email/Password gestione la cola.
+- `settings/app` guarda ajustes globales como `cooldownEnabled`.
 
-La pestaña `Administracion` contiene el login de administrador y el QR. Cuando el admin inicia sesion, en la cola aparecen los controles para pasar a la siguiente cancion, poner una cancion concreta ahora y eliminar solicitudes.
+La pestaña `Administracion` contiene el login de administrador, el interruptor para activar o desactivar la proteccion de 10 minutos y el QR. Cuando el admin inicia sesion, en la cola aparecen los controles para pasar a la siguiente cancion, poner una cancion concreta ahora y eliminar solicitudes.
 
 Activa en Firebase Console:
 
@@ -69,6 +70,13 @@ service cloud.firestore {
         && request.resource.data.status == "queued";
       allow update, delete: if isAdmin();
     }
+
+    match /settings/{settingId} {
+      allow read: if signedIn();
+      allow write: if isAdmin()
+        && settingId == "app"
+        && request.resource.data.cooldownEnabled is bool;
+    }
   }
 }
 ```
@@ -103,12 +111,12 @@ El logo `assets/logo-piltrafa-mark.png` se genero a partir del PDF local `LOGO P
 
 ## Limitacion importante
 
-GitHub Pages solo sirve ficheros estaticos. Firebase se encarga de la cola compartida. El bloqueo de 10 minutos se aplica en el frontend usando `users/{uid}.lastRequestAt`; para impedir abusos fuertes habria que reforzarlo con Cloud Functions o reglas mas estrictas.
+GitHub Pages solo sirve ficheros estaticos. Firebase se encarga de la cola compartida. El bloqueo de 10 minutos es configurable desde administracion y se aplica en el frontend usando `settings/app.cooldownEnabled` y `users/{uid}.lastRequestAt`; para impedir abusos fuertes habria que reforzarlo con Cloud Functions o reglas mas estrictas.
 
 ## Actualizar el cancionero
 
-Sustituye el `.docx` y ejecuta de nuevo:
+Sustituye `cancionero_lista_verificada.txt` y ejecuta de nuevo:
 
 ```powershell
-python tools/extract_songs.py cancionero_corregido_avanzado.docx data/songs.json
+python tools/extract_songs.py cancionero_lista_verificada.txt data/songs.json
 ```
