@@ -3,6 +3,7 @@ import { renderQrCode } from "./qr.js";
 const SONGS_URL = "data/songs.json";
 const LOCAL_LAST_REQUEST_KEY = "karaoke.lastRequestAt.fallback.v1";
 const COOLDOWN_MS = 10 * 60 * 1000;
+const SONG_RENDER_BATCH = 120;
 
 const firebaseConfig = {
   apiKey: "AIzaSyDQxvYhDtBNG0EFe7nTmVrNCDDBk7DECY4",
@@ -22,6 +23,7 @@ let firebaseErrorMessage = "";
 const state = {
   songs: [],
   filteredSongs: [],
+  visibleSongCount: SONG_RENDER_BATCH,
   requests: [],
   selectedSong: null,
   user: null,
@@ -38,6 +40,7 @@ const els = {
     admin: document.querySelector("#adminView"),
   },
   songList: document.querySelector("#songList"),
+  loadMoreSongsButton: document.querySelector("#loadMoreSongsButton"),
   currentSong: document.querySelector("#currentSong"),
   queueList: document.querySelector("#queueList"),
   completedList: document.querySelector("#completedList"),
@@ -130,8 +133,9 @@ function setView(view) {
 
 function renderSongs() {
   const fragment = document.createDocumentFragment();
+  const visibleSongs = state.filteredSongs.slice(0, state.visibleSongCount);
 
-  state.filteredSongs.forEach((song) => {
+  visibleSongs.forEach((song) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "song-card";
@@ -146,7 +150,10 @@ function renderSongs() {
   });
 
   els.songList.replaceChildren(fragment);
-  els.catalogMeta.textContent = `${state.filteredSongs.length} disponibles`;
+  els.catalogMeta.textContent = state.filteredSongs.length === visibleSongs.length
+    ? `${state.filteredSongs.length} disponibles`
+    : `${state.filteredSongs.length} disponibles · ${visibleSongs.length} visibles`;
+  els.loadMoreSongsButton.hidden = visibleSongs.length >= state.filteredSongs.length;
 }
 
 function splitQueue() {
@@ -424,6 +431,12 @@ function bindEvents() {
   els.searchInput.addEventListener("input", () => {
     const queryText = normalize(els.searchInput.value.trim());
     state.filteredSongs = queryText ? state.songs.filter((song) => song.search.includes(queryText)) : state.songs;
+    state.visibleSongCount = SONG_RENDER_BATCH;
+    renderSongs();
+  });
+
+  els.loadMoreSongsButton.addEventListener("click", () => {
+    state.visibleSongCount += SONG_RENDER_BATCH;
     renderSongs();
   });
 
